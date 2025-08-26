@@ -1,7 +1,10 @@
-use std::io::{self, Write};
+use std::io;
 
-use crossterm::{cursor, event, execute, terminal};
+use crossterm::{cursor, event, execute, style::{self, Print}, terminal};
 use event::{ KeyCode, KeyModifiers };
+
+// TODO: Put somewhere else
+const PROMPT: &str = "crabnest ~: ";
 
 pub struct Console {
     buffer: Vec<char>
@@ -16,10 +19,37 @@ impl Console {
     pub fn clear(&self) -> io::Result<()> {
         execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
         execute!(io::stdout(), cursor::MoveTo(0, 0))?;
-        return Ok(())
+        return Ok(());
     }
 
+    pub fn move_cursor_to_prompt(&self) -> io::Result<()> {
+        execute!(
+            io::stdout(),
+            cursor::MoveRight(
+                (PROMPT.len()).try_into().unwrap()
+            )
+        )?;
+
+        return Ok(());
+    }
+
+    pub fn send_prompt(&self) -> io::Result<()> {
+        execute!(
+            io::stdout(),
+            style::Print("\r\n"),
+            style::Print(PROMPT.to_owned() + "\r"),
+        )?;
+
+        self.move_cursor_to_prompt()?;
+
+        return Ok(());
+    }
+
+
     pub fn read(mut self) -> io::Result<()> {
+
+        self.send_prompt()?;
+
         loop {
             match event::read()? {
                 event::Event::Key(event) => {
@@ -27,21 +57,35 @@ impl Console {
                         // TODO: Add up and down keystrokes
                         KeyCode::Char(c) => {
                             if c == 'c' && event.modifiers.contains(KeyModifiers::CONTROL) {
-                                println!("\r");
-                                println!("Bye!\r");
+                                execute!(
+                                    io::stdout(),
+                                    Print("\r\nBye!\r"),
+                                )?;
+
                                 break;
                             }
 
                             self.buffer.push(c);
-                            print!("{}", c);
-                            io::stdout().flush()?;
+
+                            execute!(
+                                io::stdout(),
+                                Print(c),
+                            )?;
                         },
                         KeyCode::Backspace => {
                             if self.buffer.len() < 1 { continue; }
                             self.buffer.pop();
+
+                            execute!(
+                                io::stdout(),
+                                cursor::MoveLeft(1),
+                                style::Print(" "),
+                                cursor::MoveLeft(1),
+                            )?;
                         },
                         KeyCode::Enter => {
                             self.buffer.clear();
+                            self.send_prompt()?;
                         },
                         _ => {}
                     }
