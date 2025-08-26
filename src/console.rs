@@ -3,6 +3,8 @@ use std::io;
 use crossterm::{cursor, event, execute, style::{self, Print}, terminal};
 use event::{ KeyCode, KeyModifiers };
 
+use crate::command::Commands;
+
 // TODO: Put somewhere else
 const PROMPT: &str = "crabnest ~: ";
 
@@ -46,7 +48,7 @@ impl Console {
     }
 
 
-    pub fn read(mut self) -> io::Result<()> {
+    pub fn read(mut self, cmds: Commands) -> io::Result<()> {
 
         self.send_prompt()?;
 
@@ -54,12 +56,11 @@ impl Console {
             match event::read()? {
                 event::Event::Key(event) => {
                     match event.code {
-                        // TODO: Add up and down keystrokes
                         KeyCode::Char(c) => {
                             if c == 'c' && event.modifiers.contains(KeyModifiers::CONTROL) {
                                 execute!(
                                     io::stdout(),
-                                    Print("\r\nBye!\r"),
+                                    Print("\r\nBye!\r\n"),
                                 )?;
 
                                 break;
@@ -84,6 +85,14 @@ impl Console {
                             )?;
                         },
                         KeyCode::Enter => {
+                            if let Some(f) = cmds.handle(String::from_iter(&self.buffer)) {
+                                f();
+                            } else {
+                                execute!(
+                                    io::stdout(),
+                                    Print("\r\nCommand not found")
+                                )?
+                            }
                             self.buffer.clear();
                             self.send_prompt()?;
                         },
