@@ -86,13 +86,14 @@ impl Console {
                         },
                         KeyCode::Enter => {
                             if let Some(f) = cmds.handle(String::from_iter(&self.buffer)) {
-                                f();
+                                f()?;
                             } else {
                                 execute!(
                                     io::stdout(),
                                     Print("\r\nCommand not found")
                                 )?
                             }
+
                             self.buffer.clear();
                             self.send_prompt()?;
                         },
