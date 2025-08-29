@@ -1,7 +1,10 @@
 use std::io;
 
-use crossterm::{cursor, event, execute, style::{self, Print}, terminal};
-use event::{ KeyCode, KeyModifiers };
+use crossterm::{ cursor,
+    event::{ read, Event, KeyCode, KeyModifiers},
+    style::{ Print }, terminal,
+    execute
+};
 
 use crate::command::Commands;
 
@@ -38,8 +41,8 @@ impl Console {
     pub fn send_prompt(&self) -> io::Result<()> {
         execute!(
             io::stdout(),
-            style::Print("\r\n"),
-            style::Print(PROMPT.to_owned() + "\r"),
+            Print("\r\n"),
+            Print(PROMPT.to_owned() + "\r"),
         )?;
 
         self.move_cursor_to_prompt()?;
@@ -53,8 +56,8 @@ impl Console {
         self.send_prompt()?;
 
         loop {
-            match event::read()? {
-                event::Event::Key(event) => {
+            match read()? {
+                Event::Key(event) => {
                     match event.code {
                         KeyCode::Char(c) => {
                             if c == 'c' && event.modifiers.contains(KeyModifiers::CONTROL) {
@@ -80,12 +83,12 @@ impl Console {
                             execute!(
                                 io::stdout(),
                                 cursor::MoveLeft(1),
-                                style::Print(" "),
+                                Print(" "),
                                 cursor::MoveLeft(1),
                             )?;
                         },
                         KeyCode::Enter => {
-                            if let Some(f) = cmds.handle(String::from_iter(&self.buffer)) {
+                            if let Some(f) = cmds.get(String::from_iter(&self.buffer)) {
                                 f()?;
                             } else {
                                 execute!(

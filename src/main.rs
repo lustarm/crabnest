@@ -1,15 +1,18 @@
 mod console;
 mod command;
+mod agent;
+mod server;
+mod user;
 
 use console::Console;
 use command::Commands;
 
-use std::io;
+use std::{io, thread};
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let mut x = Commands::new();
-    x.insert("test", command::test)?;
+    x.load()?;
 
     let c = Console::new();
     c.clear()?;
@@ -19,5 +22,5 @@ async fn main() -> io::Result<()> {
 
     c.read(x)?;
 
-    return Ok(());
+    Ok(())
 }
