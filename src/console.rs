@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, sync::{Arc, Mutex}, thread, time};
 
 use crossterm::{ cursor,
     event::{ read, Event, KeyCode, KeyModifiers},
@@ -88,7 +88,8 @@ impl Console {
                             )?;
                         },
                         KeyCode::Enter => {
-                            if let Some(f) = cmds.get(String::from_iter(&self.buffer)) {
+                            if let Some(f) = cmds.get(&self.buffer) {
+                                // thread::spawn(move || { f().unwrap() });
                                 f()?;
                             } else {
                                 execute!(

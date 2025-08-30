@@ -1,5 +1,5 @@
 use std::net::{TcpListener, TcpStream};
-use std::io;
+use std::io::{self, Write};
 
 use crossterm::{execute, style::Print};
 
@@ -14,9 +14,8 @@ impl Server {
         execute!(
             io::stdout(),
             Print("\r\n"),
-            Print("crabnest server listening on {}"),
+            Print("crabnest server listening on "),
             Print(addr),
-            Print("\r\n")
         ).unwrap();
 
         Self{ listener: l }
@@ -30,8 +29,9 @@ impl Server {
         Ok(())
     }
 
-    fn handle(&self, stream: TcpStream) -> io::Result<()> {
+    fn handle(&self, mut stream: TcpStream) -> io::Result<()> {
         // handle stuff here
+        stream.write(b"test\n")?;
         Ok(())
     }
 }
