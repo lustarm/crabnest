@@ -34,7 +34,7 @@ Requirements:
 - Cargo
 
 ```bash
-git clone https://github.com/yourname/crabnest.git
+git clone https://github.com/lustarm/crabnest.git
 cd crabnest
 cargo build --release
 
