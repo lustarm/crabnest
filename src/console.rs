@@ -1,4 +1,4 @@
-use std::{io, sync::{Arc, Mutex}, thread, time};
+use std::io;
 
 use crossterm::{ cursor,
     event::{ read, Event, KeyCode, KeyModifiers},

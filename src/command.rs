@@ -16,20 +16,18 @@ pub struct Commands {
     cmd: HashMap<String, fn() -> io::Result<()>>
 }
 
-pub fn clear() -> io::Result<()> {
+fn clear() -> io::Result<()> {
     execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
     execute!(io::stdout(), cursor::MoveTo(0, 0))
 }
 
-pub fn help() -> io::Result<()> {
+fn help() -> io::Result<()> {
     cprintln!("welcome to crabnest")
 }
 
-pub fn listen() -> io::Result<()> {
-    // create server
-    let server = Server::listen("0.0.0.0:8000");
-
+fn listen() -> io::Result<()> {
     thread::spawn(|| {
+        let mut server = Server::listen("0.0.0.0:8000");
         server.accept().unwrap();
     });
 
@@ -46,6 +44,8 @@ impl Commands {
     pub fn load(&mut self) -> io::Result<()> {
         self.insert("help", help)?;
         self.insert("listen", listen)?;
+
+        self.insert("agents", || ->io::Result<()>{Ok(())})?;
 
         Ok(())
     }

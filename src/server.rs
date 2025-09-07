@@ -1,10 +1,13 @@
-use std::net::{TcpListener, TcpStream};
-use std::io::{self, Write};
+use std::net::TcpListener;
+use std::io;
 
 use crossterm::{execute, style::Print};
 
+use crate::agent::Agent;
+
 pub struct Server {
     listener: TcpListener,
+    agents: Vec<Agent>
 }
 
 impl Server {
@@ -18,20 +21,15 @@ impl Server {
             Print(addr),
         ).unwrap();
 
-        Self{ listener: l }
+        Self{ listener: l, agents: Vec::new() }
     }
 
-    pub fn accept(self) -> io::Result<()> {
-        for stream in self.listener.incoming() {
-            self.handle(stream?)?;
+    pub fn accept(&mut self) -> io::Result<()>{
+        loop {
+            match self.listener.accept() {
+                Ok((stream, _addr)) => Agent::new(stream).handle()?,
+                Err(_) => {}
+            }
         }
-
-        Ok(())
-    }
-
-    fn handle(&self, mut stream: TcpStream) -> io::Result<()> {
-        // handle stuff here
-        stream.write(b"test\n")?;
-        Ok(())
     }
 }
