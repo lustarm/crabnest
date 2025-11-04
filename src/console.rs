@@ -6,7 +6,7 @@ use crossterm::{ cursor,
     execute
 };
 
-use crate::command::Commands;
+use crate::{command::Commands, global::GlobalState};
 
 // TODO: Put somewhere else
 const PROMPT: &str = "crabnest ~: ";
@@ -51,7 +51,7 @@ impl Console {
     }
 
 
-    pub fn read(mut self, cmds: Commands) -> io::Result<()> {
+    pub fn read(mut self, cmds: Commands, g_state: GlobalState) -> io::Result<()> {
 
         self.send_prompt()?;
 
@@ -89,8 +89,7 @@ impl Console {
                         },
                         KeyCode::Enter => {
                             if let Some(f) = cmds.get(&self.buffer) {
-                                // thread::spawn(move || { f().unwrap() });
-                                f()?;
+                                f(g_state.clone())?;
                             } else {
                                 execute!(
                                     io::stdout(),
@@ -112,7 +111,7 @@ impl Console {
         return Ok(());
     }
 
-    pub fn get_buffer(self) -> Vec<char> {
+    pub fn _get_buffer(self) -> Vec<char> {
         return self.buffer;
     }
 }

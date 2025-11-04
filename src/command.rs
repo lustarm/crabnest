@@ -2,7 +2,7 @@ use std::{collections::HashMap, io, thread, time};
 
 use crossterm::{execute, style::Print, terminal, cursor};
 
-use crate::server::Server;
+use crate::{global::GlobalState, server::Server};
 
 #[macro_export]
 macro_rules! cprintln {
@@ -13,20 +13,20 @@ macro_rules! cprintln {
 }
 
 pub struct Commands {
-    cmd: HashMap<String, fn() -> io::Result<()>>
+    cmd: HashMap<String, fn(GlobalState) -> io::Result<()>>
 }
 
-fn clear() -> io::Result<()> {
+fn _clear() -> io::Result<()> {
     execute!(io::stdout(), terminal::Clear(terminal::ClearType::All))?;
     execute!(io::stdout(), cursor::MoveTo(0, 0))
 }
 
-fn help() -> io::Result<()> {
+fn help(_g_state: GlobalState) -> io::Result<()> {
     cprintln!("welcome to crabnest")
 }
 
-fn listen() -> io::Result<()> {
-    thread::spawn(|| {
+fn listen(_g_state: GlobalState) -> io::Result<()> {
+    thread::spawn(move || {
         let mut server = Server::listen("0.0.0.0:8000");
         server.accept().unwrap();
     });
@@ -45,12 +45,14 @@ impl Commands {
         self.insert("help", help)?;
         self.insert("listen", listen)?;
 
-        self.insert("agents", || ->io::Result<()>{Ok(())})?;
+        self.insert("agents", |_g_state| -> io::Result<()>{
+            Ok(())
+        })?;
 
         Ok(())
     }
 
-    fn insert(&mut self, s: &str, f: fn() -> io::Result<()>) -> io::Result<()> {
+    fn insert(&mut self, s: &str, f: fn(GlobalState) -> io::Result<()>) -> io::Result<()> {
         if let Some(_x) = self.cmd.insert(String::from(s), f) {
             execute!(
                 io::stdout(),
@@ -71,7 +73,7 @@ impl Commands {
         Ok(())
     }
 
-    pub fn get(&self, i: &Vec<char>) -> Option<&fn() -> io::Result<()>> {
+    pub fn get(&self, i: &Vec<char>) -> Option<&fn(GlobalState) -> io::Result<()>> {
         self.cmd.get(&i.iter().collect::<String>())
     }
 }
